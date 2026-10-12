@@ -220,7 +220,12 @@ async def run_agent_turn(session_id: str, user_message: str, force: bool = False
         yield {"type": "error", "message": "GEMINI_API_KEY is not configured in backend.env"}
         return
 
-    client = genai.Client(api_key=settings.gemini_api_key)
+    client = genai.Client(
+        api_key=settings.gemini_api_key,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(attempts=6, initial_delay=2.0, max_delay=20.0, http_status_codes=[429, 500, 502, 503, 504])
+        ),
+    )
 
     session = database.get_session(session_id)
     existing_itinerary = session.get("itinerary") if session else None
